@@ -1,0 +1,23 @@
+[package]
+name = "resizer"
+version = "0.1.0"
+authors = [ "" ]
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "resizer"
+
+[dependencies]
+futures = "0.3"
+form_urlencoded = "1.0"
+wasmbus-rpc = "0.11"
+wasmcloud-interface-httpserver = "0.8"
+wasmcloud-interface-logging = "0.8"
+image = { version = "0.24", features = ["webp-encoder"] }
+
+[profile.release]
+# Optimize for small code size
+lto = true
+opt-level = "s"
+strip = true
