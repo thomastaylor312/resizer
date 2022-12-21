@@ -19,18 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: wasmcloud/common-actions/install-wash@main
-      - name: Add wasm32-unknown-unknown
-        run: rustup target add wasm32-unknown-unknown
-      # Once you've written unit tests for your actor, you can uncomment
-      # the two lines below to automatically run tests
-      # - name: Test actor
-      #   run: cargo test --target x86_64-unknown-linux-gnu -- --nocapture
+      # TODO: update this to use the action instead once it works on ubuntu-latest
+      - name: Install wash
+        run: cargo install wash-cli
+      - name: Add wasm32-wasi
+        run: rustup target add wasm32-wasi
+      - name: Install wasi-sdk
+        run: |
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sdk-17.0-linux.tar.gz
+          tar xzvf wasi-sdk-17.0-linux.tar.gz
+          echo "PATH=$(pwd)/wasi-sdk-17.0/bin:${PATH}" >> $GITHUB_ENV
+          echo "TARGET_CFLAGS=-I $(pwd)/wasi-sdk-17.0/share/wasi-sysroot/include/" >> $GITHUB_ENV
+          echo "CC=$(pwd)/wasi-sdk-17.0/bin/clang" >> $GITHUB_ENV
       - name: Build and sign wasmCloud actor
         env:
           WASH_ISSUER_KEY: ${{ env.WASH_ISSUER_KEY }}
           WASH_SUBJECT_KEY: ${{ env.WASH_SUBJECT_KEY }}
-        run: make
+        run: wash build
       - name: Upload signed actor to GH Actions
         uses: actions/upload-artifact@v2
         with:
@@ -40,7 +45,7 @@ jobs:
   github_release:
     if: startswith(github.ref, 'refs/tags/') # Only run on tag push
     needs: build_signed_actor
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: wasmcloud/common-actions/install-wash@main
@@ -69,7 +74,7 @@ jobs:
 
   artifact_release:
     needs: build_signed_actor
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: wasmcloud/common-actions/install-wash@main
