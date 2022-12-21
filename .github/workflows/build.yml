@@ -10,14 +10,13 @@ on:
     branches: [main]
 jobs:
   build_and_test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - name: Add wasm32-wasi and clippy
         run: |
           rustup target add wasm32-wasi
           rustup component add clippy
-      - uses: wasmcloud/common-actions/install-wash@main
       - name: Install wasi-sdk
         run: |
           wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sdk-17.0-linux.tar.gz
@@ -29,6 +28,6 @@ jobs:
         run: cargo fmt -- --check
         shell: bash
       - name: Build actor
-        run: wash build
+        run: cargo build --release
       - name: Check lints with clippy
         run: cargo clippy
